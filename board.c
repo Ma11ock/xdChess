@@ -77,7 +77,7 @@ struct board *copyBoard(const struct board *board) {
   memcpy(newBoard, board, sizeof(*board));
   return newBoard;
 }
-bool rookCollision(const struct board *board, const struct move *move) {
+bool rookCollision(const struct board *board, const struct move *move, enum player player) {
   bool rank = false;
   bool up = false;
   bool left = false;
@@ -86,7 +86,7 @@ bool rookCollision(const struct board *board, const struct move *move) {
     return true;
   }
   newBoard->tiles[move->rank][move->file - 'A'].piece = move->piece;
-  newBoard->tiles[move->rank][move->file - 'A'].player = move->player;
+  newBoard->tiles[move->rank][move->file - 'A'].player = player;
   int file = move->file - 'A';
 
   for (int i = 0; i < 8; i++) {
@@ -136,7 +136,7 @@ bool rookCollision(const struct board *board, const struct move *move) {
         if (newBoard->tiles[move->rank][file - i].piece != EMPTY ||
             newBoard->tiles[move->rank][file - i].piece != EMPTY ||
             (newBoard->tiles[move->rank][file - i].piece != ROOK &&
-             newBoard->tiles[move->rank][file - i].player != move->player)) {
+             newBoard->tiles[move->rank][file - i].player != player)) {
 
           free(newBoard);
           return true;
@@ -145,7 +145,7 @@ bool rookCollision(const struct board *board, const struct move *move) {
           if (newBoard->tiles[move->rank][file + i].piece != EMPTY ||
               newBoard->tiles[move->rank][file + i].piece != EMPTY ||
               (newBoard->tiles[move->rank][file + i].piece != ROOK &&
-               newBoard->tiles[move->rank][file + i].player != move->player)) {
+               newBoard->tiles[move->rank][file + i].player != player)) {
 
             free(newBoard);
             return true;
@@ -160,7 +160,7 @@ bool rookCollision(const struct board *board, const struct move *move) {
         if (newBoard->tiles[move->rank + i][file].piece != EMPTY ||
             newBoard->tiles[move->rank + i][file].piece != EMPTY ||
             (newBoard->tiles[move->rank + i][file].piece != ROOK &&
-             newBoard->tiles[move->rank + i][file].player != move->player)) {
+             newBoard->tiles[move->rank + i][file].player != player)) {
           free(newBoard);
           return true;
         }
@@ -168,7 +168,7 @@ bool rookCollision(const struct board *board, const struct move *move) {
         if (newBoard->tiles[move->rank - i][file].piece != EMPTY ||
             newBoard->tiles[move->rank - i][file].piece != EMPTY ||
             (newBoard->tiles[move->rank - i][file].piece != ROOK &&
-             newBoard->tiles[move->rank - i][file].player != move->player)) {
+             newBoard->tiles[move->rank - i][file].player != player)) {
           free(newBoard);
           return true;
         }
@@ -179,7 +179,7 @@ bool rookCollision(const struct board *board, const struct move *move) {
   return false;
 }
 
-struct board *updateBoard(const struct board *board, const struct move *move) {
+struct board *updateBoard(const struct board *board, const struct move *move, enum player player) {
   struct board *newBoard = makeBoard();
   if (newBoard == NULL || board == NULL) {
     return NULL;
@@ -190,11 +190,11 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
   case PAWN: {
     if (legalMove(move, board)) {
       // the new board has the new move added to the board, piece and side
-      newBoard->tiles[move->rank][move->file - 'A'].player = move->player;
+      newBoard->tiles[move->rank][move->file - 'A'].player = player;
       newBoard->tiles[move->rank][move->file - 'A'].piece = move->piece;
       int mFile = (int)move->file - 'A';
       // checking for first move double space move
-      if (move->player == WHITE) {
+      if (player == WHITE) {
         if (newBoard->tiles[move->rank - 2][mFile].piece ==
                 newBoard->tiles[move->rank][mFile].piece &&
             newBoard->tiles[move->rank - 2][mFile].player ==
@@ -211,7 +211,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
           break;
         }
       }
-      if (move->player == BLACK) {
+      if (player == BLACK) {
         if (newBoard->tiles[move->rank + 2][mFile].piece ==
                 newBoard->tiles[move->rank][mFile].piece &&
             newBoard->tiles[move->rank + 2][mFile].player ==
@@ -237,7 +237,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
   case KNIGHT:
     if (legalMove(move, board)) {
       // the new board has the new move added to the board, piece and side
-      newBoard->tiles[move->rank][move->file - 'A'].player = move->player;
+      newBoard->tiles[move->rank][move->file - 'A'].player = player;
       newBoard->tiles[move->rank][move->file - 'A'].piece = move->piece;
       int moveFile = (int)move->file;
       // making sure that we remove a white knight where it was moved from
@@ -247,7 +247,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
              moveFile - 'B' >= 0 || moveFile - 'B' <= 7)) {
           if (newBoard->tiles[move->rank - 2][moveFile - 'B'].piece == KNIGHT &&
               newBoard->tiles[move->rank - 2][moveFile - 'B'].player ==
-                  move->player) {
+                  player) {
             // checking if the old knight is two ranks down and one file
             // right from the present position of the new move on success:
             // the spot matching the placement of the old knight is returned
@@ -259,7 +259,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
           }
           if (newBoard->tiles[move->rank - 2][moveFile - '@'].piece == KNIGHT &&
               newBoard->tiles[move->rank - 2][moveFile - '@'].player ==
-                  move->player) {
+                  player) {
             // checking if the old knight is two ranks down and one file
             // left from the present position of the new move on success:
             // the spot matching the placement of the old knight is returned
@@ -271,7 +271,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
           }
           if (newBoard->tiles[move->rank - 2][moveFile - '@'].piece == KNIGHT &&
               newBoard->tiles[move->rank - 2][moveFile - '@'].player ==
-                  move->player) {
+                  player) {
             // checking if the old knight is two ranks down and one file
             // left from the present position of the new move on success:
             // the spot matching the placement of the old knight is returned
@@ -287,7 +287,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
              moveFile - 'B' >= 0 || moveFile - 'B' + 1 <= 7)) {
           if (newBoard->tiles[move->rank + 2][moveFile - 'B'].piece == KNIGHT &&
               newBoard->tiles[move->rank + 2][moveFile - 'B'].player ==
-                  move->player) {
+                  player) {
             // checking if the old knight is two ranks up and one file right
             // from the present position of the new move on success: the
             // spot matching the placement of the old knight is returned to
@@ -299,7 +299,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
           }
           if (newBoard->tiles[move->rank + 2][moveFile - '@'].piece == KNIGHT &&
               newBoard->tiles[move->rank + 2][moveFile - '@'].player ==
-                  move->player) {
+                  player) {
             // checking if the old knight is two ranks up and one file left
             // from the present position of the new move on success: the
             // spot matching the placement of the old knight is returned to
@@ -315,7 +315,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
              moveFile - 'C' >= 0 || moveFile - 'C' <= 7)) {
           if (newBoard->tiles[move->rank + 1][moveFile - 'C'].piece == KNIGHT &&
               newBoard->tiles[move->rank + 1][moveFile - 'C'].player ==
-                  move->player) {
+                  player) {
             // checking if the old knight is one rank up and two files right
             // from the present position of the new move on success: the
             // spot matching the placement of the old knight is returned to
@@ -327,7 +327,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
           }
           if (newBoard->tiles[move->rank + 1][moveFile - '?'].piece == KNIGHT &&
               newBoard->tiles[move->rank + 1][moveFile - '?'].player ==
-                  move->player) {
+                  player) {
             // checking if the old knight is one rank up and two files left
             // from the present position of the new move on success: the
             // spot matching the placement of the old knight is returned to
@@ -339,7 +339,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
           }
           if (newBoard->tiles[move->rank - 1][moveFile - 'C'].piece == KNIGHT &&
               newBoard->tiles[move->rank - 1][moveFile - 'C'].player ==
-                  move->player) {
+                  player) {
             // checking if the old knight is one rank down and two files
             // right from the present position of the new move on success:
             // the spot matching the placement of the old knight is returned
@@ -350,7 +350,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
           }
           if (newBoard->tiles[move->rank - 1][moveFile - '?'].piece == KNIGHT &&
               newBoard->tiles[move->rank - 1][moveFile - '?'].player ==
-                  move->player) {
+                  player) {
             // checking if the old knight is one rank down and two files
             // left from the present position of the new move on success:
             // the spot matching the placement of the old knight is returned
@@ -364,7 +364,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
       if (newBoard->tiles[move->rank][moveFile - 'A'].player == BLACK) {
         if (newBoard->tiles[move->rank - 2][moveFile - 'B'].piece == KNIGHT &&
             newBoard->tiles[move->rank - 2][moveFile - 'B'].player ==
-                move->player) {
+                player) {
           // checking if the old knight is two ranks down and one file right
           // from the present position of the new move on success: the spot
           // matching the placement of the old knight is returned to '-' on
@@ -375,7 +375,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
         }
         if (newBoard->tiles[move->rank - 2][moveFile - '@'].piece == KNIGHT &&
             newBoard->tiles[move->rank - 2][moveFile - '@'].player ==
-                move->player) {
+                player) {
           // checking if the old knight is two ranks down and one file left
           // from the present position of the new move on success: the spot
           // matching the placement of the old knight is returned to '-' on
@@ -386,7 +386,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
         }
         if (newBoard->tiles[move->rank + 2][moveFile - 'B'].piece == KNIGHT &&
             newBoard->tiles[move->rank + 2][moveFile - 'B'].player ==
-                move->player) {
+                player) {
           // checking if the old knight is two ranks up and one file right
           // from the present position of the new move on success: the spot
           // matching the placement of the old knight is returned to '-' on
@@ -397,7 +397,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
         }
         if (newBoard->tiles[move->rank + 2][moveFile - '@'].piece == KNIGHT &&
             newBoard->tiles[move->rank + 2][moveFile - '@'].player ==
-                move->player) {
+                player) {
           // checking if the old knight is two ranks up and one file left
           // from the present position of the new move on success: the spot
           // matching the placement of the old knight is returned to '-' on
@@ -408,7 +408,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
         }
         if (newBoard->tiles[move->rank + 1][moveFile - 'C'].piece == KNIGHT &&
             newBoard->tiles[move->rank + 1][moveFile - 'C'].player ==
-                move->player) {
+                player) {
           // checking if the old knight is one rank up and two files right
           // from the present position of the new move on success: the spot
           // matching the placement of the old knight is returned to '-' on
@@ -419,7 +419,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
         }
         if (newBoard->tiles[move->rank + 1][moveFile - '?'].piece == KNIGHT &&
             newBoard->tiles[move->rank + 1][moveFile - '?'].player ==
-                move->player) {
+                player) {
           // checking if the old knight is one rank up and two files left
           // from the present position of the new move on success: the spot
           // matching the placement of the old knight is returned to '-' on
@@ -430,7 +430,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
         }
         if (newBoard->tiles[move->rank - 1][moveFile - 'C'].piece == KNIGHT &&
             newBoard->tiles[move->rank - 1][moveFile - 'C'].player ==
-                move->player) {
+                player) {
           // checking if the old knight is one rank down and two files right
           // from the present position of the new move on success: the spot
           // matching the placement of the old knight is returned to '-' on
@@ -441,7 +441,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
         }
         if (newBoard->tiles[move->rank - 1][moveFile - '?'].piece == KNIGHT &&
             newBoard->tiles[move->rank - 1][moveFile - '?'].player ==
-                move->player) {
+                player) {
           // checking if the old knight is one rank down and two files left
           // from the present position of the new move on success: the spot
           // matching the placement of the old knight is returned to '-' on
@@ -460,7 +460,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
       // first, checking for the legality of the move
       if (legalMove(move, board)) {
         // the new board has the new move added to the board, piece and side
-        newBoard->tiles[move->rank][move->file - 'A'].player = move->player;
+        newBoard->tiles[move->rank][move->file - 'A'].player = player;
         newBoard->tiles[move->rank][move->file - 'A'].piece = move->piece;
         int file = move->file - 'A';
         for (int i = 1; i < 8; i++) {
@@ -500,7 +500,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
       break;
     case ROOK:
       // the new board has the new move added to the board, piece and side
-      newBoard->tiles[move->rank][move->file - 'A'].player = move->player;
+      newBoard->tiles[move->rank][move->file - 'A'].player = player;
       newBoard->tiles[move->rank][move->file - 'A'].piece = move->piece;
       // first, checking for the legality of the move
       if (legalMove(move, board)) {
@@ -542,48 +542,48 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
         }
       } else {
         printf("Failure to detect rook in move: %s %s %c %d\n\n",
-               getPlayerString(move->player), getPieceString(move->piece),
+               getPlayerString(player), getPieceString(move->piece),
                (char)move->file, move->rank + 1);
         break;
       }
       break;
     case KING:
       // the new board has the new move added to the board, piece and side
-      newBoard->tiles[move->rank][move->file - 'A'].player = move->player;
+      newBoard->tiles[move->rank][move->file - 'A'].player = player;
       newBoard->tiles[move->rank][move->file - 'A'].piece = move->piece;
       int fileMove = (int)move->file - 'A';
       if (legalMove(move, board)) {
-        if (move->player == WHITE) {
+        if (player == WHITE) {
           if ((move->rank + 1 <= 7) &&
               (fileMove - 1 >= 0 || fileMove + 1 <= 7)) {
             if (board->tiles[move->rank + 1][fileMove + 1].piece ==
                     move->piece &&
                 board->tiles[move->rank + 1][fileMove + 1].player ==
-                    move->player) {
+                    player) {
               newBoard->tiles[move->rank + 1][fileMove + 1].player = NONE;
               newBoard->tiles[move->rank + 1][fileMove + 1].piece = EMPTY;
             }
             if (board->tiles[move->rank + 1][fileMove].piece == move->piece &&
-                board->tiles[move->rank + 1][fileMove].player == move->player) {
+                board->tiles[move->rank + 1][fileMove].player == player) {
               newBoard->tiles[move->rank + 1][fileMove].player = NONE;
               newBoard->tiles[move->rank + 1][fileMove].piece = EMPTY;
             }
             if (board->tiles[move->rank + 1][fileMove - 1].piece ==
                     move->piece &&
                 board->tiles[move->rank + 1][fileMove - 1].player ==
-                    move->player) {
+                    player) {
               newBoard->tiles[move->rank + 1][fileMove - 1].player = NONE;
               newBoard->tiles[move->rank + 1][fileMove - 1].piece = EMPTY;
             }
           }
           if (fileMove - 1 >= 0 || fileMove + 1 <= 7) {
             if (board->tiles[move->rank][fileMove - 1].piece == move->piece &&
-                board->tiles[move->rank][fileMove - 1].player == move->player) {
+                board->tiles[move->rank][fileMove - 1].player == player) {
               newBoard->tiles[move->rank][fileMove - 1].player = NONE;
               newBoard->tiles[move->rank][fileMove - 1].piece = EMPTY;
             }
             if (board->tiles[move->rank][fileMove + 1].piece == move->piece &&
-                board->tiles[move->rank][fileMove + 1].player == move->player) {
+                board->tiles[move->rank][fileMove + 1].player == player) {
               newBoard->tiles[move->rank][fileMove + 1].player = NONE;
               newBoard->tiles[move->rank][fileMove + 1].piece = EMPTY;
             }
@@ -592,20 +592,20 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
               if (board->tiles[move->rank - 1][fileMove - 1].piece ==
                       move->piece &&
                   board->tiles[move->rank - 1][fileMove - 1].player ==
-                      move->player) {
+                      player) {
                 newBoard->tiles[move->rank - 1][fileMove - 1].player = NONE;
                 newBoard->tiles[move->rank - 1][fileMove - 1].piece = EMPTY;
               }
               if (board->tiles[move->rank - 1][fileMove].piece == move->piece &&
                   board->tiles[move->rank - 1][fileMove].player ==
-                      move->player) {
+                      player) {
                 newBoard->tiles[move->rank - 1][fileMove].player = NONE;
                 newBoard->tiles[move->rank - 1][fileMove].piece = EMPTY;
               }
               if (board->tiles[move->rank - 1][fileMove + 1].piece ==
                       move->piece &&
                   board->tiles[move->rank - 1][fileMove + 1].player ==
-                      move->player) {
+                      player) {
                 newBoard->tiles[move->rank - 1][fileMove + 1].player = NONE;
                 newBoard->tiles[move->rank - 1][fileMove + 1].piece = EMPTY;
               }
@@ -615,37 +615,37 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
             return newBoard;
           }
         }
-        if (move->player == BLACK) {
+        if (player == BLACK) {
           if ((move->rank + 1 <= 7) &&
               (fileMove - 1 >= 0 || fileMove + 1 <= 7)) {
             if (board->tiles[move->rank + 1][fileMove + 1].piece ==
                     move->piece &&
                 board->tiles[move->rank + 1][fileMove + 1].player ==
-                    move->player) {
+                    player) {
               newBoard->tiles[move->rank + 1][fileMove + 1].player = NONE;
               newBoard->tiles[move->rank + 1][fileMove + 1].piece = EMPTY;
             }
             if (board->tiles[move->rank + 1][fileMove].piece == move->piece &&
-                board->tiles[move->rank + 1][fileMove].player == move->player) {
+                board->tiles[move->rank + 1][fileMove].player == player) {
               newBoard->tiles[move->rank + 1][fileMove].player = NONE;
               newBoard->tiles[move->rank + 1][fileMove].piece = EMPTY;
             }
             if (board->tiles[move->rank + 1][fileMove - 1].piece ==
                     move->piece &&
                 board->tiles[move->rank + 1][fileMove - 1].player ==
-                    move->player) {
+                    player) {
               newBoard->tiles[move->rank + 1][fileMove - 1].player = NONE;
               newBoard->tiles[move->rank + 1][fileMove - 1].piece = EMPTY;
             }
           }
           if (fileMove - 1 >= 0 || fileMove + 1 <= 7) {
             if (board->tiles[move->rank][fileMove - 1].piece == move->piece &&
-                board->tiles[move->rank][fileMove - 1].player == move->player) {
+                board->tiles[move->rank][fileMove - 1].player == player) {
               newBoard->tiles[move->rank][fileMove - 1].player = NONE;
               newBoard->tiles[move->rank][fileMove - 1].piece = EMPTY;
             }
             if (board->tiles[move->rank][fileMove + 1].piece == move->piece &&
-                board->tiles[move->rank][fileMove + 1].player == move->player) {
+                board->tiles[move->rank][fileMove + 1].player == player) {
               newBoard->tiles[move->rank][fileMove + 1].player = NONE;
               newBoard->tiles[move->rank][fileMove + 1].piece = EMPTY;
             }
@@ -654,20 +654,20 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
               if (board->tiles[move->rank - 1][fileMove - 1].piece ==
                       move->piece &&
                   board->tiles[move->rank - 1][fileMove - 1].player ==
-                      move->player) {
+                      player) {
                 newBoard->tiles[move->rank - 1][fileMove - 1].player = NONE;
                 newBoard->tiles[move->rank - 1][fileMove - 1].piece = EMPTY;
               }
               if (board->tiles[move->rank - 1][fileMove].piece == move->piece &&
                   board->tiles[move->rank - 1][fileMove].player ==
-                      move->player) {
+                      player) {
                 newBoard->tiles[move->rank - 1][fileMove].player = NONE;
                 newBoard->tiles[move->rank - 1][fileMove].piece = EMPTY;
               }
               if (board->tiles[move->rank - 1][fileMove + 1].piece ==
                       move->piece &&
                   board->tiles[move->rank - 1][fileMove + 1].player ==
-                      move->player) {
+                      player) {
                 newBoard->tiles[move->rank - 1][fileMove + 1].player = NONE;
                 newBoard->tiles[move->rank - 1][fileMove + 1].piece = EMPTY;
               }
@@ -683,13 +683,13 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
 
       if (legalMove(move, board)) {
         // the new board has the new move added to the board, piece and side
-        newBoard->tiles[move->rank][move->file - 'A'].player = move->player;
+        newBoard->tiles[move->rank][move->file - 'A'].player = player;
         newBoard->tiles[move->rank][move->file - 'A'].piece = move->piece;
         int moveFile = (int)move->file - 'A';
         for (int i = 1; i < 8; i++) {
           if (newBoard->tiles[move->rank + i][moveFile].piece == move->piece &&
               newBoard->tiles[move->rank + i][moveFile].player ==
-                  move->player) {
+                  player) {
             newBoard->tiles[move->rank + i][moveFile].piece = EMPTY;
             newBoard->tiles[move->rank + i][moveFile].player = NONE;
 
@@ -698,7 +698,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
           if (newBoard->tiles[move->rank + i][moveFile + i].piece ==
                   move->piece &&
               newBoard->tiles[move->rank + i][moveFile + i].player ==
-                  move->player) {
+                  player) {
             newBoard->tiles[move->rank + i][moveFile + i].piece = EMPTY;
             newBoard->tiles[move->rank + i][moveFile + i].player = NONE;
             break;
@@ -706,14 +706,14 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
           if (newBoard->tiles[move->rank + i][moveFile - i].piece ==
                   move->piece &&
               newBoard->tiles[move->rank + i][moveFile - i].player ==
-                  move->player) {
+                  player) {
             newBoard->tiles[move->rank + i][moveFile - i].piece = EMPTY;
             newBoard->tiles[move->rank + i][moveFile - i].player = NONE;
             break;
           }
           if (newBoard->tiles[move->rank - i][moveFile].piece == move->piece &&
               newBoard->tiles[move->rank - i][moveFile].player ==
-                  move->player) {
+                  player) {
             newBoard->tiles[move->rank - i][moveFile].piece = EMPTY;
             newBoard->tiles[move->rank - i][moveFile].player = NONE;
             break;
@@ -721,7 +721,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
           if (newBoard->tiles[move->rank - i][moveFile + i].piece ==
                   move->piece &&
               newBoard->tiles[move->rank - i][moveFile + i].player ==
-                  move->player) {
+                  player) {
             newBoard->tiles[move->rank - i][moveFile + i].piece = EMPTY;
             newBoard->tiles[move->rank - i][moveFile + i].player = NONE;
             break;
@@ -729,21 +729,21 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
           if (newBoard->tiles[move->rank - i][moveFile - i].piece ==
                   move->piece &&
               newBoard->tiles[move->rank - i][moveFile - i].player ==
-                  move->player) {
+                  player) {
             newBoard->tiles[move->rank - i][moveFile - i].piece = EMPTY;
             newBoard->tiles[move->rank - i][moveFile - i].player = NONE;
             break;
           }
           if (newBoard->tiles[move->rank][moveFile + i].piece == move->piece &&
               newBoard->tiles[move->rank][moveFile + i].player ==
-                  move->player) {
+                  player) {
             newBoard->tiles[move->rank][moveFile + i].piece = EMPTY;
             newBoard->tiles[move->rank][moveFile + i].player = NONE;
             break;
           }
           if (newBoard->tiles[move->rank][moveFile - i].piece == move->piece &&
               newBoard->tiles[move->rank][moveFile - i].player ==
-                  move->player) {
+                  player) {
             newBoard->tiles[move->rank][moveFile - i].piece = EMPTY;
             newBoard->tiles[move->rank][moveFile - i].player = NONE;
             break;
@@ -755,8 +755,8 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
       }
       break;
     default:
-      if (move->flags & CASTLE) {
-        if (move->player == WHITE) {
+        if (isCastle(move->flags)) {
+        if (player == WHITE) {
           newBoard->tiles[0][5].piece = ROOK;
           newBoard->tiles[0][5].player = WHITE;
           newBoard->tiles[0][6].piece = KING;
@@ -766,7 +766,7 @@ struct board *updateBoard(const struct board *board, const struct move *move) {
           newBoard->tiles[0][4].piece = EMPTY;
           newBoard->tiles[0][4].player = NONE;
         }
-        if (move->player == BLACK) {
+        if (player == BLACK) {
           newBoard->tiles[7][5].piece = ROOK;
           newBoard->tiles[7][5].player = BLACK;
           newBoard->tiles[7][6].piece = KING;

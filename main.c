@@ -56,41 +56,41 @@ FILE *file2 = NULL;
  *  argv: Argument vector.
  */
 void parseCMDArgs(int argc, const char *const *argv) {
-  // TODO: files with dashes
-  for (int i = 1; i < argc; i++) {
-    const char *curArg = argv[i];
-    if (curArg[0] == '-') {
-      // Check if just a -, meaning stdin.
-      if (curArg[1] == '\0') {
-        if (file1 == NULL) {
-          file1 = stdin;
-        } else if (file2 == NULL) {
-          file2 = stdin;
-        } else { // Error, both files already set.
-          fprintf(stderr, "Error: given too many files. Exiting.\n");
+    // TODO: files with dashes
+    for (int i = 1; i < argc; i++) {
+        const char *curArg = argv[i];
+        if (curArg[0] == '-') {
+            // Check if just a -, meaning stdin.
+            if (curArg[1] == '\0') {
+                if (file1 == NULL) {
+                    file1 = stdin;
+                } else if (file2 == NULL) {
+                    file2 = stdin;
+                } else { // Error, both files already set.
+                    fprintf(stderr, "Error: given too many files. Exiting.\n");
+                }
+            }
+        } else {
+            if (file1 == NULL) {
+                file1 = fopen(curArg, "r");
+                if (file1 == NULL) {
+                    fprintf(stderr, "Error when opening %s:", curArg);
+                    perror(NULL);
+                }
+            } else if (file2 == NULL) {
+                file2 = fopen(curArg, "r");
+                if (file2 == NULL) {
+                    fprintf(stderr, "Error when opening %s:", curArg);
+                    perror(NULL);
+                }
+            } else { // Error, both files already set.
+                fprintf(stderr, "Error: given too many files. Exiting.\n");
+            }
         }
-      }
-    } else {
-      if (file1 == NULL) {
-        file1 = fopen(curArg, "r");
-        if (file1 == NULL) {
-          fprintf(stderr, "Error when opening %s:", curArg);
-          perror(NULL);
-        }
-      } else if (file2 == NULL) {
-        file2 = fopen(curArg, "r");
-        if (file2 == NULL) {
-          fprintf(stderr, "Error when opening %s:", curArg);
-          perror(NULL);
-        }
-      } else { // Error, both files already set.
-        fprintf(stderr, "Error: given too many files. Exiting.\n");
-      }
     }
-  }
-  if (file1 == NULL) {
-    file1 = stdin;
-  }
+    if (file1 == NULL) {
+        file1 = stdin;
+    }
 }
 
 /*
@@ -99,56 +99,59 @@ void parseCMDArgs(int argc, const char *const *argv) {
  * argv: Argument vector.
  * return: 0 on success, 1 on initialization failure.
  */
- int turn;
+int turn;
 int main(int argc, const char *const *argv) {
-  parseCMDArgs(argc, argv);
-  struct board *board = makeBoard();
-  if (board == NULL) {
-    perror("board");
-    return 1;
-  }
-  printBoard(board);
-  initMoves();
-  struct linkedList *list = getList(file1, file2);
-  if (list == NULL) {
-    printf("No file detected.\nType to play moves:\n");
-    struct move *singleMove;
-    char input[8];
-    fgets(input, sizeof(input), stdin);
-    while (input != NULL) {
-
-      struct board *newBoard = updateBoard(board, singleMove);
-      if (newBoard == NULL) {
-        break;
-      }
-
-      destroyBoard(board);
-      printBoard(newBoard);
-      board = newBoard;
-      printf("Play next move: \n");
-      free(singleMove);
-      fgets(input, sizeof(input), stdin);
-
+    parseCMDArgs(argc, argv);
+    struct board *board = makeBoard();
+    if (board == NULL) {
+        perror("board");
+        return 1;
     }
-  } else {
-    struct node *moveNode = list->first;
-    for (int i = 0; i < (int)list->size; i++) {
-      struct move *move = (struct move *)moveNode->data;
-      if (move->player == WHITE) {
-        turn++;
-        printf("Turn %d\n", turn);
-      }
-      struct board *newBoard = updateBoard(board, move);
-      if (newBoard == NULL) {
-        break;
-      }
-      destroyBoard(board);
-      printBoard(newBoard);
-      board = newBoard;
-      moveNode = moveNode->next;
+    printBoard(board);
+    initMoves();
+    struct linkedList *list = getList(file1, file2);
+    if (list == NULL) {
+        printf("No file detected.\nType to play moves:\n");
+        struct move *singleMove;
+        char input[8];
+        fgets(input, sizeof(input), stdin);
+        /*
+          while (input[0] != '\0') {
+
+          struct board *newBoard = updateBoard(board, singleMove, WHITE);
+          if (newBoard == NULL) {
+          break;
+          }
+
+          destroyBoard(board);
+          printBoard(newBoard);
+          board = newBoard;
+          printf("Play next move: \n");
+          free(singleMove);
+          fgets(input, sizeof(input), stdin);
+
+          }
+          }else { */
+        struct node *moveNode = list->first;
+        enum player player = WHITE;
+        for (int i = 0; i < (int)list->size; i++, player = (player == WHITE) ? BLACK : WHITE) {
+            struct move *move = (struct move *)moveNode->data;
+            if (player == WHITE) {
+                turn++;
+                printf("Turn %d\n", turn);
+            }
+            struct board *newBoard = updateBoard(board, move, player);
+            if (newBoard == NULL) {
+                break;
+            }
+            destroyBoard(board);
+            printBoard(newBoard);
+            board = newBoard;
+            moveNode = moveNode->next;
+        }
+        /* } */
+        destroyList(list);
+        destroyBoard(board);
+        return 0;
     }
-  }
-  destroyList(list);
-  destroyBoard(board);
-  return 0;
 }
